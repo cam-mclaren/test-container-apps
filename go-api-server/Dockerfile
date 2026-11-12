@@ -1,12 +1,11 @@
-FROM ubuntu:noble 
+FROM golang:1.26 AS build
+WORKDIR /src
+COPY go.mod go.sum* ./
+# RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 go build -o /out/main .
 
-WORKDIR /usr/local/app
-
-COPY main ./
-
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=build /out/main /main
 EXPOSE 8080
-
-RUN useradd app
-USER app
-
-CMD ["/usr/local/app/main"]
+ENTRYPOINT ["/main"]
